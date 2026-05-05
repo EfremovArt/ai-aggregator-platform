@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Dark cyber AI palette — used by default; light is vestigial. */
+    --background: 240 16% 5%;
+    --foreground: 220 20% 96%;
+    --card: 240 16% 7%;
+    --card-foreground: 220 20% 96%;
+    --popover: 240 18% 6%;
+    --popover-foreground: 220 20% 96%;
+    --primary: 252 100% 70%;
+    --primary-foreground: 240 16% 5%;
+    --secondary: 240 12% 12%;
+    --secondary-foreground: 220 20% 96%;
+    --muted: 240 12% 12%;
+    --muted-foreground: 220 12% 64%;
+    --accent: 187 100% 56%;
+    --accent-foreground: 240 16% 5%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 8% 16%;
+    --input: 240 8% 16%;
+    --ring: 252 100% 70%;
+    --radius: 0.75rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-background text-foreground antialiased min-h-screen;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+  ::selection {
+    background: hsl(var(--primary) / 0.4);
+    color: white;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/[0.03] backdrop-blur-xl border border-white/[0.06];
+  }
+  .glass-strong {
+    @apply bg-white/[0.06] backdrop-blur-2xl border border-white/[0.10];
+  }
+  .glow-text {
+    text-shadow: 0 0 30px rgba(124, 92, 255, 0.55), 0 0 80px rgba(34, 227, 255, 0.25);
+  }
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-[linear-gradient(120deg,#A78BFA_10%,#22E3FF_50%,#A0FF00_90%)];
+  }
+  .btn-primary-glow {
+    box-shadow:
+      0 0 0 1px rgba(124, 92, 255, 0.4),
+      0 8px 32px -8px rgba(124, 92, 255, 0.6),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+  .ring-cyber {
+    background-image: conic-gradient(from 180deg at 50% 50%, #7c5cff, #22e3ff, #a0ff00, #ff36f0, #7c5cff);
+  }
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 999px;
+  }
+  .grid-bg {
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+    -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+            mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+  }
+}

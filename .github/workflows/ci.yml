@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with: { version: 9 }
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install
+        run: pnpm install --frozen-lockfile=false
+
+      - name: Generate Prisma client
+        run: pnpm --filter @ai-platform/database exec prisma generate
+
+      - name: Build shared
+        run: pnpm --filter @ai-platform/shared build
+
+      - name: Typecheck (api)
+        run: pnpm --filter @ai-platform/api typecheck
+
+      - name: Typecheck (web)
+        run: pnpm --filter @ai-platform/web typecheck
+
+      - name: Lint
+        run: pnpm -w lint || true   # informational; fail loud once code stabilises
+
+  build:
+    runs-on: ubuntu-latest
+    needs: lint-and-typecheck
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: 'pnpm' }
+
+      - run: pnpm install --frozen-lockfile=false
+      - run: pnpm --filter @ai-platform/database exec prisma generate
+      - run: pnpm --filter @ai-platform/api build
+      - run: pnpm --filter @ai-platform/web build
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+          NEXT_PUBLIC_API_URL: 'http://localhost:4000'
+          NEXT_PUBLIC_APP_URL: 'http://localhost:3000'
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: lint-and-typecheck
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./infra/docker/api.Dockerfile
+          push: false
+          tags: aiplatform/api:ci
+      - name: Build web image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./infra/docker/web.Dockerfile
+          push: false
+          tags: aiplatform/web:ci
