@@ -1,10 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-import passportGithub2 = require('passport-github2');
-
-const GitHubBase = passportGithub2.Strategy;
+import { Strategy as GitHubBase } from 'passport-github2';
 
 @Injectable()
 export class GitHubStrategy extends PassportStrategy(GitHubBase, 'github') {
