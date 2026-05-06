@@ -19,6 +19,11 @@ import { HealthModule } from './modules/health/health.module';
 import { ModelsModule } from './modules/models/models.module';
 import { ModelRouterModule } from './modules/model-router/model-router.module';
 import { BlogModule } from './modules/blog/blog.module';
+import { AssistantsModule } from './modules/assistants/assistants.module';
+import { CouponsModule } from './modules/coupons/coupons.module';
+import { ReferralsModule } from './modules/referrals/referrals.module';
+import { FreeTierModule } from './modules/free-tier/free-tier.module';
+import { MediaModule } from './modules/media/media.module';
 
 @Module({
   imports: [
@@ -47,6 +52,11 @@ import { BlogModule } from './modules/blog/blog.module';
     BillingModule,
     AdminModule,
     BlogModule,
+    AssistantsModule,
+    CouponsModule,
+    ReferralsModule,
+    FreeTierModule,
+    MediaModule,
     HealthModule,
   ],
 })

@@ -12,12 +12,16 @@ import {
   Cpu,
   ShieldAlert,
   Settings,
+  Sparkles,
+  Users,
 } from 'lucide-react';
 
 const ITEMS = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Обзор' },
   { href: '/dashboard/chat', icon: MessagesSquare, label: 'Чат' },
+  { href: '/dashboard/assistants', icon: Sparkles, label: 'Ассистенты' },
   { href: '/dashboard/billing', icon: Wallet, label: 'Биллинг' },
+  { href: '/dashboard/referrals', icon: Users, label: 'Рефералы' },
   { href: '/dashboard/history', icon: History, label: 'История' },
   { href: '/dashboard/api-keys', icon: KeyRound, label: 'API ключи' },
   { href: '/dashboard/models', icon: Cpu, label: 'Модели' },

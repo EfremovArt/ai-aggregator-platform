@@ -38,56 +38,64 @@ enum UserStatus {
 }
 
 model User {
-  id                  String     @id @default(cuid())
-  email               String     @unique
-  emailVerifiedAt     DateTime?
-  passwordHash        String?
-  displayName         String?
-  avatarUrl           String?
-  role                UserRole   @default(USER)
-  status              UserStatus @default(PENDING_VERIFICATION)
-  twoFactorEnabled    Boolean    @default(false)
-  twoFactorSecret     String?
-  preferredLocale     String     @default("ru")
-  marketingOptIn      Boolean    @default(false)
+  id               String     @id @default(cuid())
+  email            String     @unique
+  emailVerifiedAt  DateTime?
+  passwordHash     String?
+  displayName      String?
+  avatarUrl        String?
+  role             UserRole   @default(USER)
+  status           UserStatus @default(PENDING_VERIFICATION)
+  twoFactorEnabled Boolean    @default(false)
+  twoFactorSecret  String?
+  preferredLocale  String     @default("ru")
+  marketingOptIn   Boolean    @default(false)
 
   // Anti-abuse
-  signupIp            String?
-  signupCountry       String?
-  signupUserAgent     String?
-  signupFingerprint   String?
-  riskScore           Int        @default(0) // 0..100
+  signupIp          String?
+  signupCountry     String?
+  signupUserAgent   String?
+  signupFingerprint String?
+  riskScore         Int     @default(0) // 0..100
 
   // Cost protection (overrides defaults)
-  dailyUsdLimit       Decimal?   @db.Decimal(10, 4)
-  monthlyUsdLimit     Decimal?   @db.Decimal(10, 4)
+  dailyUsdLimit       Decimal? @db.Decimal(10, 4)
+  monthlyUsdLimit     Decimal? @db.Decimal(10, 4)
   perRequestMaxTokens Int?
-  hardCutoffUsd       Decimal?   @db.Decimal(10, 4)
+  hardCutoffUsd       Decimal? @db.Decimal(10, 4)
 
-  createdAt           DateTime   @default(now())
-  updatedAt           DateTime   @updatedAt
-  lastSeenAt          DateTime?
+  // Referral
+  referralCode String? @unique // user's own referral code
+
+  // Free-tier (e.g. Grom) — monthly bucket of free tokens routed to cheapest model
+  freeQuotaTokensUsed Int      @default(0)
+  freeQuotaResetAt    DateTime @default(now())
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  lastSeenAt DateTime?
 
   // Relations
-  oauthAccounts       OAuthAccount[]
-  sessions            Session[]
-  refreshTokens       RefreshToken[]
-  apiKeys             ApiKey[]
-  balance             UserBalance?
-  ledgerEntries       LedgerEntry[]
-  transactions        Transaction[]
-  invoices            Invoice[]
-  requestLogs         RequestLog[]
-  abuseSignals        AbuseSignal[]
-  moderationItems     ModerationItem[]
-  bans                Ban[]
-  notifications       Notification[]
-  emailVerifications  EmailVerification[]
-  passwordResets      PasswordReset[]
-  auditLogs           AuditLog[]
-  alerts              SpendingAlert[]
-  referredBy          Referral?       @relation("ReferralReferred")
-  referrals           Referral[]      @relation("ReferralReferrer")
+  oauthAccounts      OAuthAccount[]
+  sessions           Session[]
+  refreshTokens      RefreshToken[]
+  apiKeys            ApiKey[]
+  balance            UserBalance?
+  ledgerEntries      LedgerEntry[]
+  transactions       Transaction[]
+  invoices           Invoice[]
+  requestLogs        RequestLog[]
+  abuseSignals       AbuseSignal[]
+  moderationItems    ModerationItem[]
+  bans               Ban[]
+  notifications      Notification[]
+  emailVerifications EmailVerification[]
+  passwordResets     PasswordReset[]
+  auditLogs          AuditLog[]
+  alerts             SpendingAlert[]
+  referredBy         Referral?           @relation("ReferralReferred")
+  referrals          Referral[]          @relation("ReferralReferrer")
+  couponRedemptions  CouponRedemption[]
 
   @@index([status])
   @@index([role])
@@ -102,36 +110,36 @@ enum OAuthProvider {
 }
 
 model OAuthAccount {
-  id           String        @id @default(cuid())
-  userId       String
-  provider     OAuthProvider
-  providerId   String
-  accessToken  String?
-  refreshToken String?
+  id             String        @id @default(cuid())
+  userId         String
+  provider       OAuthProvider
+  providerId     String
+  accessToken    String?
+  refreshToken   String?
   tokenExpiresAt DateTime?
-  raw          Json?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  raw            Json?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerId])
   @@index([userId])
 }
 
 model Session {
-  id            String    @id @default(cuid())
-  userId        String
-  ip            String?
-  userAgent     String?
-  fingerprint   String?
-  country       String?
-  createdAt     DateTime  @default(now())
-  lastUsedAt    DateTime  @default(now())
-  expiresAt     DateTime
-  revokedAt     DateTime?
+  id          String    @id @default(cuid())
+  userId      String
+  ip          String?
+  userAgent   String?
+  fingerprint String?
+  country     String?
+  createdAt   DateTime  @default(now())
+  lastUsedAt  DateTime  @default(now())
+  expiresAt   DateTime
+  revokedAt   DateTime?
 
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([expiresAt])
@@ -139,46 +147,46 @@ model Session {
 
 // Refresh tokens — stored hashed for rotation/revocation.
 model RefreshToken {
-  id             String    @id @default(cuid())
-  userId         String
-  tokenHash      String    @unique
-  parentTokenId  String?
-  ip             String?
-  userAgent      String?
-  fingerprint    String?
-  createdAt      DateTime  @default(now())
-  expiresAt      DateTime
-  rotatedAt      DateTime?
-  revokedAt      DateTime?
-  revokedReason  String?
+  id            String    @id @default(cuid())
+  userId        String
+  tokenHash     String    @unique
+  parentTokenId String?
+  ip            String?
+  userAgent     String?
+  fingerprint   String?
+  createdAt     DateTime  @default(now())
+  expiresAt     DateTime
+  rotatedAt     DateTime?
+  revokedAt     DateTime?
+  revokedReason String?
 
-  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([expiresAt])
 }
 
 model EmailVerification {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   userId     String
-  tokenHash  String   @unique
+  tokenHash  String    @unique
   email      String
-  createdAt  DateTime @default(now())
+  createdAt  DateTime  @default(now())
   expiresAt  DateTime
   consumedAt DateTime?
 
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model PasswordReset {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   userId     String
-  tokenHash  String   @unique
-  createdAt  DateTime @default(now())
+  tokenHash  String    @unique
+  createdAt  DateTime  @default(now())
   expiresAt  DateTime
   consumedAt DateTime?
 
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // -----------------------------------------------------------------------------
@@ -195,7 +203,7 @@ model ApiKey {
   id              String       @id @default(cuid())
   userId          String
   name            String
-  prefix          String       // first 8 chars (e.g. "sk-aix-...") shown to user
+  prefix          String // first 8 chars (e.g. "sk-aix-...") shown to user
   keyHash         String       @unique // SHA-256 of full key, full key never stored
   status          ApiKeyStatus @default(ACTIVE)
   scopes          String[]     @default([])
@@ -208,8 +216,8 @@ model ApiKey {
   expiresAt       DateTime?
   revokedAt       DateTime?
 
-  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  requestLogs     RequestLog[]
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  requestLogs RequestLog[]
 
   @@index([userId])
   @@index([status])
@@ -245,49 +253,49 @@ enum ModelCapability {
 }
 
 model Provider {
-  id            ProviderId    @id
-  displayName   String
-  baseUrl       String?
-  status        String        @default("ACTIVE") // ACTIVE | DEGRADED | DOWN
-  weight        Int           @default(100)
-  latencyMs     Int           @default(0)
-  errorRate     Float         @default(0)
-  lastHealthAt  DateTime?
-  config        Json?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id           ProviderId @id
+  displayName  String
+  baseUrl      String?
+  status       String     @default("ACTIVE") // ACTIVE | DEGRADED | DOWN
+  weight       Int        @default(100)
+  latencyMs    Int        @default(0)
+  errorRate    Float      @default(0)
+  lastHealthAt DateTime?
+  config       Json?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
-  models        Model[]
-  requestLogs   RequestLog[]
-  costRecords   ProviderCost[]
+  models      Model[]
+  requestLogs RequestLog[]
+  costRecords ProviderCost[]
 }
 
 model Model {
-  id              String           @id @default(cuid())
+  id              String            @id @default(cuid())
   providerId      ProviderId
-  slug            String           @unique // e.g. openai/gpt-4o-mini
+  slug            String            @unique // e.g. openai/gpt-4o-mini
   displayName     String
   family          String?
   description     String?
   capabilities    ModelCapability[] @default([])
-  contextLength   Int              @default(8192)
-  maxOutputTokens Int              @default(4096)
+  contextLength   Int               @default(8192)
+  maxOutputTokens Int               @default(4096)
   // Pricing in USD per 1M tokens
-  inputUsdPer1M   Decimal          @default(0) @db.Decimal(12, 6)
-  outputUsdPer1M  Decimal          @default(0) @db.Decimal(12, 6)
-  imageUsdPerImg  Decimal          @default(0) @db.Decimal(12, 6)
+  inputUsdPer1M   Decimal           @default(0) @db.Decimal(12, 6)
+  outputUsdPer1M  Decimal           @default(0) @db.Decimal(12, 6)
+  imageUsdPerImg  Decimal           @default(0) @db.Decimal(12, 6)
   // Margin we charge on top of provider price
-  marginPercent   Float            @default(20)
-  isActive        Boolean          @default(true)
-  isFeatured      Boolean          @default(false)
+  marginPercent   Float             @default(20)
+  isActive        Boolean           @default(true)
+  isFeatured      Boolean           @default(false)
   fallbackSlug    String?
-  tags            String[]         @default([])
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  tags            String[]          @default([])
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 
-  provider        Provider         @relation(fields: [providerId], references: [id])
-  requestLogs     RequestLog[]
-  costRecords     ProviderCost[]
+  provider    Provider       @relation(fields: [providerId], references: [id])
+  requestLogs RequestLog[]
+  costRecords ProviderCost[]
 
   @@index([providerId])
   @@index([isActive])
@@ -301,8 +309,8 @@ model ProviderCost {
   inputUsdPer1M  Decimal    @db.Decimal(12, 6)
   outputUsdPer1M Decimal    @db.Decimal(12, 6)
 
-  provider       Provider   @relation(fields: [providerId], references: [id])
-  model          Model      @relation(fields: [modelId], references: [id])
+  provider Provider @relation(fields: [providerId], references: [id])
+  model    Model    @relation(fields: [modelId], references: [id])
 
   @@index([modelId])
 }
@@ -331,38 +339,38 @@ enum RequestKind {
 }
 
 model RequestLog {
-  id              String        @id @default(cuid())
-  userId          String?
-  apiKeyId        String?
-  providerId      ProviderId?
-  modelId         String?
-  modelSlug       String?
-  kind            RequestKind   @default(CHAT)
-  status          RequestStatus @default(SUCCESS)
-  promptTokens    Int           @default(0)
-  completionTokens Int          @default(0)
-  totalTokens     Int           @default(0)
+  id               String        @id @default(cuid())
+  userId           String?
+  apiKeyId         String?
+  providerId       ProviderId?
+  modelId          String?
+  modelSlug        String?
+  kind             RequestKind   @default(CHAT)
+  status           RequestStatus @default(SUCCESS)
+  promptTokens     Int           @default(0)
+  completionTokens Int           @default(0)
+  totalTokens      Int           @default(0)
   // What we charged the user
-  costUsd         Decimal       @default(0) @db.Decimal(12, 8)
+  costUsd          Decimal       @default(0) @db.Decimal(12, 8)
   // What the provider cost us
-  providerCostUsd Decimal       @default(0) @db.Decimal(12, 8)
+  providerCostUsd  Decimal       @default(0) @db.Decimal(12, 8)
   // Margin = costUsd - providerCostUsd
-  marginUsd       Decimal       @default(0) @db.Decimal(12, 8)
-  latencyMs       Int           @default(0)
-  ip              String?
-  userAgent       String?
-  fingerprint     String?
-  country         String?
-  cached          Boolean       @default(false)
-  cacheKey        String?
-  errorMessage    String?
-  metadata        Json?
-  createdAt       DateTime      @default(now())
+  marginUsd        Decimal       @default(0) @db.Decimal(12, 8)
+  latencyMs        Int           @default(0)
+  ip               String?
+  userAgent        String?
+  fingerprint      String?
+  country          String?
+  cached           Boolean       @default(false)
+  cacheKey         String?
+  errorMessage     String?
+  metadata         Json?
+  createdAt        DateTime      @default(now())
 
-  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
-  apiKey          ApiKey?       @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
-  provider        Provider?     @relation(fields: [providerId], references: [id])
-  model           Model?        @relation(fields: [modelId], references: [id])
+  user     User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  apiKey   ApiKey?   @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+  provider Provider? @relation(fields: [providerId], references: [id])
+  model    Model?    @relation(fields: [modelId], references: [id])
 
   @@index([userId, createdAt])
   @@index([apiKeyId, createdAt])
@@ -377,14 +385,14 @@ model RequestLog {
 // -----------------------------------------------------------------------------
 
 model UserBalance {
-  userId         String   @id
+  userId        String   @id
   // Internal credits (1 credit = 1 USD-cent equivalent for simplicity)
-  balanceUsd     Decimal  @default(0) @db.Decimal(12, 4)
-  lifetimeSpend  Decimal  @default(0) @db.Decimal(14, 4)
-  lifetimeTopup  Decimal  @default(0) @db.Decimal(14, 4)
-  updatedAt      DateTime @updatedAt
+  balanceUsd    Decimal  @default(0) @db.Decimal(12, 4)
+  lifetimeSpend Decimal  @default(0) @db.Decimal(14, 4)
+  lifetimeTopup Decimal  @default(0) @db.Decimal(14, 4)
+  updatedAt     DateTime @updatedAt
 
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum LedgerEntryKind {
@@ -399,18 +407,18 @@ enum LedgerEntryKind {
 
 // Append-only ledger — single source of truth for every balance change.
 model LedgerEntry {
-  id             String          @id @default(cuid())
-  userId         String
-  kind           LedgerEntryKind
-  amountUsd      Decimal         @db.Decimal(12, 4) // positive = credit, negative = debit
-  description    String?
-  balanceAfter   Decimal         @db.Decimal(12, 4)
-  refType        String?         // 'transaction' | 'request' | 'refund' | 'admin'
-  refId          String?
-  metadata       Json?
-  createdAt      DateTime        @default(now())
+  id           String          @id @default(cuid())
+  userId       String
+  kind         LedgerEntryKind
+  amountUsd    Decimal         @db.Decimal(12, 4) // positive = credit, negative = debit
+  description  String?
+  balanceAfter Decimal         @db.Decimal(12, 4)
+  refType      String? // 'transaction' | 'request' | 'refund' | 'admin'
+  refId        String?
+  metadata     Json?
+  createdAt    DateTime        @default(now())
 
-  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
   @@index([refType, refId])
@@ -435,31 +443,31 @@ enum TransactionStatus {
 }
 
 model Transaction {
-  id              String            @id @default(cuid())
-  userId          String
-  provider        PaymentProvider
-  externalId      String?           @unique
-  status          TransactionStatus @default(PENDING)
-  amountUsd       Decimal           @db.Decimal(12, 4)
-  amountOriginal  Decimal           @db.Decimal(14, 4)
-  currency        String            @default("USD")
-  exchangeRate    Decimal           @default(1) @db.Decimal(14, 8)
-  fee             Decimal           @default(0) @db.Decimal(12, 4)
-  description     String?
-  ip              String?
-  userAgent       String?
-  fingerprint     String?
-  country         String?
-  metadata        Json?
+  id                String            @id @default(cuid())
+  userId            String
+  provider          PaymentProvider
+  externalId        String?           @unique
+  status            TransactionStatus @default(PENDING)
+  amountUsd         Decimal           @db.Decimal(12, 4)
+  amountOriginal    Decimal           @db.Decimal(14, 4)
+  currency          String            @default("USD")
+  exchangeRate      Decimal           @default(1) @db.Decimal(14, 8)
+  fee               Decimal           @default(0) @db.Decimal(12, 4)
+  description       String?
+  ip                String?
+  userAgent         String?
+  fingerprint       String?
+  country           String?
+  metadata          Json?
   webhookReceivedAt DateTime?
-  webhookEventIds String[]          @default([]) // for replay protection
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  completedAt     DateTime?
+  webhookEventIds   String[]          @default([]) // for replay protection
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  completedAt       DateTime?
 
-  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  invoice         Invoice?
-  refunds         Refund[]
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoice Invoice?
+  refunds Refund[]
 
   @@index([userId, createdAt])
   @@index([status])
@@ -467,17 +475,17 @@ model Transaction {
 }
 
 model Refund {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   transactionId String
-  amountUsd     Decimal  @db.Decimal(12, 4)
+  amountUsd     Decimal   @db.Decimal(12, 4)
   reason        String?
-  status        String   @default("PENDING")
+  status        String    @default("PENDING")
   externalId    String?
   metadata      Json?
-  createdAt     DateTime @default(now())
+  createdAt     DateTime  @default(now())
   completedAt   DateTime?
 
-  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
 }
 
 model Invoice {
@@ -492,8 +500,8 @@ model Invoice {
   metadata      Json?
   issuedAt      DateTime @default(now())
 
-  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transaction   Transaction? @relation(fields: [transactionId], references: [id])
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transaction Transaction? @relation(fields: [transactionId], references: [id])
 
   @@index([userId])
 }
@@ -525,16 +533,16 @@ enum AbuseSignalKind {
 }
 
 model AbuseSignal {
-  id        String          @id @default(cuid())
-  userId    String?
-  ip        String?
+  id          String          @id @default(cuid())
+  userId      String?
+  ip          String?
   fingerprint String?
-  kind      AbuseSignalKind
-  weight    Int             @default(10) // contribution to risk score
-  metadata  Json?
-  createdAt DateTime        @default(now())
+  kind        AbuseSignalKind
+  weight      Int             @default(10) // contribution to risk score
+  metadata    Json?
+  createdAt   DateTime        @default(now())
 
-  user      User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([userId, createdAt])
   @@index([ip, createdAt])
@@ -551,33 +559,33 @@ enum BanScope {
 }
 
 model Ban {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   scope       BanScope
   value       String
   userId      String?
   reason      String?
   expiresAt   DateTime?
   createdById String?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
 
-  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@unique([scope, value])
   @@index([scope])
 }
 
 model IpReputationCache {
-  ip             String   @id
-  riskScore      Int      // 0..100
-  isVpn          Boolean  @default(false)
-  isTor          Boolean  @default(false)
-  isProxy        Boolean  @default(false)
-  isDatacenter   Boolean  @default(false)
-  country        String?
-  asn            String?
-  raw            Json?
-  fetchedAt      DateTime @default(now())
-  expiresAt      DateTime
+  ip           String   @id
+  riskScore    Int // 0..100
+  isVpn        Boolean  @default(false)
+  isTor        Boolean  @default(false)
+  isProxy      Boolean  @default(false)
+  isDatacenter Boolean  @default(false)
+  country      String?
+  asn          String?
+  raw          Json?
+  fetchedAt    DateTime @default(now())
+  expiresAt    DateTime
 }
 
 // -----------------------------------------------------------------------------
@@ -606,21 +614,21 @@ enum ModerationCategory {
 }
 
 model ModerationItem {
-  id           String              @id @default(cuid())
-  userId       String?
-  requestLogId String?
-  status       ModerationStatus    @default(PENDING)
-  categories   ModerationCategory[] @default([])
-  score        Float               @default(0)
-  source       String              @default("openai") // 'openai' | 'keyword' | 'image' | 'manual'
-  contentHash  String?
+  id             String               @id @default(cuid())
+  userId         String?
+  requestLogId   String?
+  status         ModerationStatus     @default(PENDING)
+  categories     ModerationCategory[] @default([])
+  score          Float                @default(0)
+  source         String               @default("openai") // 'openai' | 'keyword' | 'image' | 'manual'
+  contentHash    String?
   contentSnippet String?
-  reviewedById String?
-  reviewedAt   DateTime?
-  notes        String?
-  createdAt    DateTime            @default(now())
+  reviewedById   String?
+  reviewedAt     DateTime?
+  notes          String?
+  createdAt      DateTime             @default(now())
 
-  user         User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([status])
   @@index([userId])
@@ -639,20 +647,20 @@ model SpendingAlert {
   triggered Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Notification {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
   kind      String
   title     String
   body      String
   readAt    DateTime?
   metadata  Json?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
 }
@@ -662,16 +670,16 @@ model Notification {
 // -----------------------------------------------------------------------------
 
 model Referral {
-  id          String   @id @default(cuid())
-  referrerId  String
-  referredId  String   @unique
-  code        String
-  bonusUsd    Decimal  @default(0) @db.Decimal(12, 4)
-  paidOut     Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  referrerId String
+  referredId String   @unique
+  code       String
+  bonusUsd   Decimal  @default(0) @db.Decimal(12, 4)
+  paidOut    Boolean  @default(false)
+  createdAt  DateTime @default(now())
 
-  referrer    User     @relation("ReferralReferrer", fields: [referrerId], references: [id], onDelete: Cascade)
-  referred    User     @relation("ReferralReferred", fields: [referredId], references: [id], onDelete: Cascade)
+  referrer User @relation("ReferralReferrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referred User @relation("ReferralReferred", fields: [referredId], references: [id], onDelete: Cascade)
 }
 
 // -----------------------------------------------------------------------------
@@ -679,17 +687,17 @@ model Referral {
 // -----------------------------------------------------------------------------
 
 model AuditLog {
-  id         String   @id @default(cuid())
-  userId     String?
-  actorType  String   @default("user") // user | admin | system | api
-  action     String
-  target     String?
-  ip         String?
-  userAgent  String?
-  metadata   Json?
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  userId    String?
+  actorType String   @default("user") // user | admin | system | api
+  action    String
+  target    String?
+  ip        String?
+  userAgent String?
+  metadata  Json?
+  createdAt DateTime @default(now())
 
-  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([userId, createdAt])
   @@index([action])
@@ -702,18 +710,88 @@ model Setting {
 }
 
 model BlogPost {
-  id          String   @id @default(cuid())
-  slug        String   @unique
+  id          String    @id @default(cuid())
+  slug        String    @unique
   title       String
   excerpt     String
   content     String
   coverUrl    String?
-  authorName  String   @default("AI Aggregator")
-  tags        String[] @default([])
-  published   Boolean  @default(false)
+  authorName  String    @default("AI Aggregator")
+  tags        String[]  @default([])
+  published   Boolean   @default(false)
   publishedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([published, publishedAt])
+}
+
+// -----------------------------------------------------------------------------
+// ASSISTANTS (preset templates with system prompts — Маркетолог, Грамотей, etc.)
+// -----------------------------------------------------------------------------
+
+model Assistant {
+  id               String   @id @default(cuid())
+  slug             String   @unique
+  name             String
+  emoji            String?
+  category         String // marketing | writing | code | education | creative | business | personal
+  description      String
+  systemPrompt     String
+  recommendedModel String? // e.g. "openai/gpt-4o-mini"
+  isPublic         Boolean  @default(true)
+  isFeatured       Boolean  @default(false)
+  uses             Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([category, isPublic])
+  @@index([isFeatured])
+}
+
+// -----------------------------------------------------------------------------
+// COUPONS / PROMO CODES
+// -----------------------------------------------------------------------------
+
+enum CouponType {
+  DEPOSIT_BONUS // +N% to subsequent deposit
+  FIXED_BONUS // immediate ₽/$ to balance
+  FREE_TOKENS // free token allowance for a model class
+}
+
+model Coupon {
+  id               String     @id @default(cuid())
+  code             String     @unique
+  type             CouponType
+  amountUsd        Decimal?   @db.Decimal(12, 4) // for FIXED_BONUS
+  bonusPercent     Int? // for DEPOSIT_BONUS
+  freeTokens       Int? // for FREE_TOKENS
+  maxRedemptions   Int? // null = unlimited
+  redemptionsCount Int        @default(0)
+  perUserLimit     Int        @default(1)
+  validFrom        DateTime   @default(now())
+  validUntil       DateTime?
+  isActive         Boolean    @default(true)
+  description      String?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  redemptions CouponRedemption[]
+
+  @@index([code, isActive])
+}
+
+model CouponRedemption {
+  id        String   @id @default(cuid())
+  userId    String
+  couponId  String
+  amountUsd Decimal  @db.Decimal(12, 4) // amount actually credited
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  coupon Coupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, couponId])
+  @@index([userId, createdAt])
 }

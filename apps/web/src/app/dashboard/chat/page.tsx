@@ -15,10 +15,25 @@ interface Model {
   provider: { displayName: string };
 }
 
+interface FreeQuota {
+  enabled: boolean;
+  virtualSlug: string;
+  monthlyTokens: number;
+  usedTokens: number;
+  remainingTokens: number;
+  resetAt: string;
+  routedModel: string;
+}
+
 interface Msg { role: 'user' | 'assistant'; content: string }
 
 export default function ChatPage() {
   const models = useQuery({ queryKey: ['models'], queryFn: () => api<Model[]>('/models') });
+  const freeQuota = useQuery({
+    queryKey: ['free-tier'],
+    queryFn: () => api<FreeQuota>('/free-tier/me'),
+    retry: false,
+  });
   const [model, setModel] = useState('openai/gpt-4o-mini');
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
@@ -92,12 +107,24 @@ export default function ChatPage() {
           value={model}
           onChange={(e) => setModel(e.target.value)}
         >
+          {freeQuota.data?.enabled && (
+            <option value={freeQuota.data.virtualSlug}>🚀 Grom Free (бесплатно)</option>
+          )}
           {(models.data ?? []).map((m) => (
             <option key={m.slug} value={m.slug}>
               {m.provider.displayName} · {m.displayName}
             </option>
           ))}
         </select>
+        {freeQuota.data?.enabled && (
+          <span className="ml-auto text-xs text-muted-foreground">
+            Grom Free:{' '}
+            <span className="font-mono text-cyber-cyan">
+              {freeQuota.data.remainingTokens.toLocaleString('ru')}
+            </span>{' '}
+            / {freeQuota.data.monthlyTokens.toLocaleString('ru')} токенов
+          </span>
+        )}
       </div>
       <Card className="flex flex-1 flex-col overflow-hidden">
         <CardContent ref={scroller} className="scrollbar-thin flex-1 space-y-4 overflow-y-auto p-6">

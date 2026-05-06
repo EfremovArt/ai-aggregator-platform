@@ -28,8 +28,24 @@ export default function BillingPage() {
   const qc = useQueryClient();
   const [amount, setAmount] = useState(10);
   const [provider, setProvider] = useState<Provider>('STRIPE');
+  const [couponCode, setCouponCode] = useState('');
   const balance = useQuery({ queryKey: ['balance'], queryFn: () => api<Balance>('/billing/balance') });
   const txs = useQuery({ queryKey: ['transactions'], queryFn: () => api<Tx[]>('/billing/transactions') });
+
+  const redeemCoupon = useMutation({
+    mutationFn: () =>
+      api<{ message: string; amountCreditedUsd: number; code: string }>('/coupons/redeem', {
+        method: 'POST',
+        json: { code: couponCode.trim() },
+      }),
+    onSuccess: (res) => {
+      toast.success(res.message);
+      setCouponCode('');
+      qc.invalidateQueries({ queryKey: ['balance'] });
+      qc.invalidateQueries({ queryKey: ['transactions'] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const topup = useMutation({
     mutationFn: () =>
@@ -110,6 +126,33 @@ export default function BillingPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader><CardTitle>Промокод</CardTitle></CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="flex-1 space-y-1.5">
+              <Label htmlFor="coupon">Введите код</Label>
+              <Input
+                id="coupon"
+                value={couponCode}
+                placeholder="WELCOME50"
+                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+              />
+            </div>
+            <Button
+              variant="cyber"
+              disabled={redeemCoupon.isPending || !couponCode.trim()}
+              onClick={() => redeemCoupon.mutate()}
+            >
+              {redeemCoupon.isPending ? 'Применяем…' : 'Применить'}
+            </Button>
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Бонус начисляется на баланс. Коды типа MAY100 — добавляются к следующему пополнению.
+          </p>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader><CardTitle>История транзакций</CardTitle></CardHeader>

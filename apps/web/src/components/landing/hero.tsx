@@ -42,6 +42,12 @@ export function Hero() {
           </Link>
         </div>
 
+        <div className="mx-auto mt-6 inline-flex animate-fade-up [animation-delay:220ms]">
+          <Badge variant="outline" className="border-cyber-cyan/30 bg-cyber-cyan/5 text-xs">
+            🚀 Grom Free — 50 000 токенов в месяц бесплатно, без карты
+          </Badge>
+        </div>
+
         <div className="mx-auto mt-16 grid max-w-4xl grid-cols-1 gap-3 md:grid-cols-3 animate-fade-up [animation-delay:280ms]">
           <Feature icon={<Zap />} title="Streaming SSE" desc="Низкая задержка, fallback при сбоях провайдера" />
           <Feature icon={<ShieldCheck />} title="Защита 360°" desc="Rate limits, IP-репутация, fingerprint, anti-fraud" />

@@ -17,9 +17,10 @@ import { UsageLedgerService } from './usage-ledger.service';
 import { ModelRouterModule } from '../model-router/model-router.module';
 import { ApiKeysModule } from '../api-keys/api-keys.module';
 import { ModerationModule } from '../moderation/moderation.module';
+import { FreeTierModule } from '../free-tier/free-tier.module';
 
 @Module({
-  imports: [ModelRouterModule, ApiKeysModule, ModerationModule],
+  imports: [ModelRouterModule, ApiKeysModule, ModerationModule, FreeTierModule],
   controllers: [AiGatewayController],
   providers: [
     AiGatewayService,

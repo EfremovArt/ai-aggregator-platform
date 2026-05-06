@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from 'next/font/google';
 import { Toaster } from 'sonner';
 import './globals.css';
 import { Providers } from '@/components/providers';
+import { CookieConsent } from '@/components/site/cookie-consent';
 
 const inter = Inter({ subsets: ['latin', 'cyrillic'], variable: '--font-sans', display: 'swap' });
 const mono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono', display: 'swap' });
@@ -56,6 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen scrollbar-thin">
         <Providers>{children}</Providers>
         <Toaster position="top-right" theme="dark" richColors />
+        <CookieConsent />
       </body>
     </html>
   );
