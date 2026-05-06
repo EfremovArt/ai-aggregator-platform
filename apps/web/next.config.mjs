@@ -15,9 +15,19 @@ const nextConfig = {
     optimizePackageImports: ['lucide-react', 'framer-motion'],
   },
   async headers() {
+    const isDev = process.env.NODE_ENV !== 'production';
+    const scriptSrc = [
+      "'self'",
+      "'unsafe-inline'",
+      // Next.js dev mode uses eval() for HMR / Fast Refresh; production uses static chunks
+      ...(isDev ? ["'unsafe-eval'"] : []),
+      'https://challenges.cloudflare.com',
+      'https://telegram.org',
+      'https://*.telegram.org',
+    ].join(' ');
     const csp = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://telegram.org https://*.telegram.org",
+      `script-src ${scriptSrc}`,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com data:",
       "img-src 'self' data: blob: https:",

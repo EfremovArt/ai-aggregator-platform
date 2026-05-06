@@ -19,10 +19,12 @@ function readChoice(): Choice {
 }
 
 export function CookieConsent() {
-  const [visible, setVisible] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    if (readChoice() === null) setVisible(true);
+    setMounted(true);
+    if (readChoice() !== null) setVisible(false);
   }, []);
 
   const persist = (c: Exclude<Choice, null>) => {
@@ -34,7 +36,7 @@ export function CookieConsent() {
     setVisible(false);
   };
 
-  if (!visible) return null;
+  if (!mounted || !visible) return null;
 
   return (
     <div
