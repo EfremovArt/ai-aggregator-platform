@@ -19,15 +19,15 @@ export function Hero() {
       <div className="container relative pt-20 pb-32 md:pt-28 md:pb-40 text-center">
         <div className="mx-auto inline-flex animate-fade-up">
           <Badge variant="cyber" className="px-3 py-1 text-xs">
-            <Sparkles className="mr-1 h-3 w-3" /> 7 моделей · 5 способов оплаты · 1 API ключ
+            <Sparkles className="mr-1 h-3 w-3" /> 30+ моделей · текст · код · картинки · видео · аудио
           </Badge>
         </div>
         <h1 className="mt-6 text-4xl font-semibold tracking-tight md:text-6xl glow-text animate-fade-up [animation-delay:60ms]">
           One API. <span className="gradient-text">Every AI model.</span>
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-base text-muted-foreground md:text-lg animate-fade-up [animation-delay:120ms]">
-          Единый шлюз к OpenAI, Claude, Gemini, DeepSeek, Mistral, Grok и Qwen.
-          Pay-as-you-go, прозрачные цены, корпоративная безопасность.
+          Чат, код, картинки, видео, голос и embeddings — без подписок. Только pay-per-use:
+          платите ровно за тот запрос, который сделали. Цена видна до отправки.
         </p>
         <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row animate-fade-up [animation-delay:180ms]">
           <Link href="/register">

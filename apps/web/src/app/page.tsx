@@ -1,6 +1,7 @@
 import { Header } from '@/components/site/header';
 import { Footer } from '@/components/site/footer';
 import { Hero } from '@/components/landing/hero';
+import { Capabilities } from '@/components/landing/capabilities';
 import { Models } from '@/components/landing/models';
 import { Pricing } from '@/components/landing/pricing';
 import { ApiSection } from '@/components/landing/api-section';
@@ -41,6 +42,7 @@ export default function HomePage() {
       <Header />
       <main>
         <Hero />
+        <Capabilities />
         <Models />
         <Pricing />
         <ApiSection />
