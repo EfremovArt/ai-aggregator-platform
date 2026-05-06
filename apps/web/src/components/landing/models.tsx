@@ -1,6 +1,3 @@
-'use client';
-
-import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
@@ -25,13 +22,7 @@ export function Models() {
           title="Все ведущие AI — в одной точке"
           desc="Прозрачные цены, единый формат запросов, smart routing с fallback."
         />
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-50px' }}
-          transition={{ duration: 0.5 }}
-          className="mt-12 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3"
-        >
+        <div className="mt-12 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
           {MODELS.map((m) => (
             <Card key={m.name}>
               <CardContent className="p-5">
@@ -55,7 +46,7 @@ export function Models() {
               </CardContent>
             </Card>
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

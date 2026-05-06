@@ -1,7 +1,4 @@
-'use client';
-
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles, ShieldCheck, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,39 +17,19 @@ export function Hero() {
         style={{ animationDelay: '5s' }}
       />
       <div className="container relative pt-20 pb-32 md:pt-28 md:pb-40 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mx-auto inline-flex"
-        >
+        <div className="mx-auto inline-flex animate-fade-up">
           <Badge variant="cyber" className="px-3 py-1 text-xs">
             <Sparkles className="mr-1 h-3 w-3" /> 7 моделей · 5 способов оплаты · 1 API ключ
           </Badge>
-        </motion.div>
-        <motion.h1
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.05 }}
-          className="mt-6 text-4xl font-semibold tracking-tight md:text-6xl glow-text"
-        >
+        </div>
+        <h1 className="mt-6 text-4xl font-semibold tracking-tight md:text-6xl glow-text animate-fade-up [animation-delay:60ms]">
           One API. <span className="gradient-text">Every AI model.</span>
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="mx-auto mt-6 max-w-2xl text-base text-muted-foreground md:text-lg"
-        >
+        </h1>
+        <p className="mx-auto mt-6 max-w-2xl text-base text-muted-foreground md:text-lg animate-fade-up [animation-delay:120ms]">
           Единый шлюз к OpenAI, Claude, Gemini, DeepSeek, Mistral, Grok и Qwen.
           Pay-as-you-go, прозрачные цены, корпоративная безопасность.
-        </motion.p>
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.15 }}
-          className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row"
-        >
+        </p>
+        <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row animate-fade-up [animation-delay:180ms]">
           <Link href="/register">
             <Button size="lg" variant="cyber">
               Начать бесплатно <ArrowRight className="ml-2 h-4 w-4" />
@@ -63,18 +40,13 @@ export function Hero() {
               Документация API
             </Button>
           </Link>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.25 }}
-          className="mx-auto mt-16 grid max-w-4xl grid-cols-1 gap-3 md:grid-cols-3"
-        >
+        <div className="mx-auto mt-16 grid max-w-4xl grid-cols-1 gap-3 md:grid-cols-3 animate-fade-up [animation-delay:280ms]">
           <Feature icon={<Zap />} title="Streaming SSE" desc="Низкая задержка, fallback при сбоях провайдера" />
           <Feature icon={<ShieldCheck />} title="Защита 360°" desc="Rate limits, IP-репутация, fingerprint, anti-fraud" />
           <Feature icon={<Sparkles />} title="Cost protection" desc="Жесткие лимиты — нельзя нажечь больше баланса" />
-        </motion.div>
+        </div>
       </div>
     </section>
   );
