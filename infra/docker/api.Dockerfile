@@ -17,7 +17,9 @@ COPY apps/api ./apps/api
 
 # Generate Prisma client and compile
 RUN pnpm --filter @ai-platform/database exec prisma generate
-RUN pnpm --filter @ai-platform/shared build || true
+# Compile @ai-platform/shared to JS first — the api consumes it as a CommonJS
+# package at runtime, so the dist/ output is mandatory (do NOT swallow errors).
+RUN pnpm --filter @ai-platform/shared build
 RUN pnpm --filter @ai-platform/api build
 
 # Prune dev deps for runtime

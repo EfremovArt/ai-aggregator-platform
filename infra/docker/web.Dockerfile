@@ -14,7 +14,7 @@ RUN pnpm install --frozen-lockfile=false
 COPY packages/shared ./packages/shared
 COPY apps/web ./apps/web
 
-RUN pnpm --filter @ai-platform/shared build || true
+RUN pnpm --filter @ai-platform/shared build
 RUN pnpm --filter @ai-platform/web build
 
 
