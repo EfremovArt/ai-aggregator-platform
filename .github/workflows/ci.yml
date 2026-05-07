@@ -30,6 +30,9 @@ jobs:
       - name: Generate Prisma client
         run: pnpm --filter @ai-platform/database exec prisma generate
 
+      - name: Build shared package (api/web import its dist/)
+        run: pnpm --filter @ai-platform/shared build
+
       - name: Typecheck (api)
         run: pnpm --filter @ai-platform/api typecheck
 
@@ -53,6 +56,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile=false
       - run: pnpm --filter @ai-platform/database exec prisma generate
+      - run: pnpm --filter @ai-platform/shared build
       - run: pnpm --filter @ai-platform/api build
       - run: pnpm --filter @ai-platform/web build
         env:
