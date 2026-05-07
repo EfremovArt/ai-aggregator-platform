@@ -4,6 +4,7 @@ import { PaymentProvider, TransactionStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { LedgerService } from './ledger.service';
 import { BillingProviderFactory } from './providers/billing-provider.factory';
+import { NotificationsService } from '../notifications/notifications.service';
 import type { TopupInput } from '@ai-platform/shared';
 
 interface CreateTopupCtx {
@@ -22,6 +23,7 @@ export class BillingService {
     private readonly prisma: PrismaService,
     private readonly ledger: LedgerService,
     private readonly factory: BillingProviderFactory,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async createTopup(input: TopupInput, ctx: CreateTopupCtx) {
@@ -98,6 +100,21 @@ export class BillingService {
     });
     if (status === TransactionStatus.SUCCEEDED) {
       await this.ledger.credit(tx.userId, Number(tx.amountUsd), `topup:${tx.provider}`, 'transaction', tx.id);
+      // Clear the low-balance notify flag so future drops below threshold trigger again.
+      await this.prisma.user.update({
+        where: { id: tx.userId },
+        data: { lowBalanceNotifiedAt: null },
+      });
+      const user = await this.prisma.user.findUnique({ where: { id: tx.userId } });
+      const balance = await this.prisma.userBalance.findUnique({ where: { userId: tx.userId } });
+      if (user) {
+        await this.notifications.sendPaymentSuccess(
+          user,
+          Number(tx.amountUsd),
+          Number(balance?.balanceUsd ?? 0),
+          tx.provider,
+        );
+      }
     }
     return updated;
   }

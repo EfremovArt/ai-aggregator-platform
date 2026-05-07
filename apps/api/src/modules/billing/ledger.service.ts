@@ -1,10 +1,14 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { Prisma, type LedgerEntryKind } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class LedgerService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   async credit(
     userId: string,
@@ -61,8 +65,8 @@ export class LedgerService {
   }
 
   async refund(userId: string, transactionId: string, amountUsd: number, reason?: string) {
-    return this.prisma.$transaction(async (tx) => {
-      const refund = await tx.refund.create({
+    const refund = await this.prisma.$transaction(async (tx) => {
+      const r = await tx.refund.create({
         data: {
           transactionId,
           amountUsd: new Prisma.Decimal(amountUsd),
@@ -83,11 +87,17 @@ export class LedgerService {
           balanceAfter: balance.balanceUsd,
           description: reason ?? 'refund',
           refType: 'refund',
-          refId: refund.id,
+          refId: r.id,
         },
       });
-      return refund;
+      return r;
     });
+
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (user) {
+      await this.notifications.sendRefund(user, amountUsd);
+    }
+    return refund;
   }
 
   async list(userId: string) {

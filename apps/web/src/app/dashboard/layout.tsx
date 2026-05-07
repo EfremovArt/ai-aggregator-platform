@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Logo } from '@/components/site/logo';
 import { DashboardNav } from '@/components/dashboard/nav';
+import { OnboardingStories } from '@/components/dashboard/onboarding';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -23,6 +24,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
         <div className="flex-1 p-6">{children}</div>
       </main>
+      <OnboardingStories />
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Activity, Users, ShieldAlert, Flag, BarChart3, Server } from 'lucide-react';
+import { Activity, Users, ShieldAlert, Flag, BarChart3, Server, Ticket, Download } from 'lucide-react';
 
 const ITEMS = [
   { href: '/admin', icon: Activity, label: 'Обзор' },
@@ -11,6 +11,8 @@ const ITEMS = [
   { href: '/admin/fraud', icon: ShieldAlert, label: 'Anti-fraud' },
   { href: '/admin/moderation', icon: Flag, label: 'Модерация' },
   { href: '/admin/analytics', icon: BarChart3, label: 'Аналитика' },
+  { href: '/admin/coupons', icon: Ticket, label: 'Промокоды' },
+  { href: '/admin/exports', icon: Download, label: 'Экспорт CSV' },
   { href: '/admin/providers', icon: Server, label: 'Провайдеры' },
 ];
 

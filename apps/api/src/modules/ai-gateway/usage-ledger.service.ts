@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Prisma, type Model, type RequestKind, type RequestStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 interface RecordUsageInput {
   userId?: string;
@@ -26,7 +28,11 @@ interface RecordUsageInput {
 export class UsageLedgerService {
   private readonly logger = new Logger('UsageLedger');
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly config: ConfigService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   /**
    * Atomically: insert request log, decrement user balance, write ledger entry.
@@ -97,5 +103,37 @@ export class UsageLedgerService {
         }
       }
     });
+
+    // Post-charge: best-effort low-balance notification (outside the transaction).
+    if (input.userId && input.costUsd > 0 && input.status === 'SUCCESS') {
+      this.maybeNotifyLowBalance(input.userId).catch((e) =>
+        this.logger.warn(`low-balance check failed: ${(e as Error).message}`),
+      );
+    }
+  }
+
+  /**
+   * Sends a low-balance email/telegram if the balance just crossed the user's
+   * threshold (de-duplicated by `lowBalanceNotifiedAt`; cleared on the next top-up).
+   */
+  private async maybeNotifyLowBalance(userId: string): Promise<void> {
+    const [user, balance] = await Promise.all([
+      this.prisma.user.findUnique({ where: { id: userId } }),
+      this.prisma.userBalance.findUnique({ where: { userId } }),
+    ]);
+    if (!user || !balance) return;
+    if (user.lowBalanceNotifiedAt) return; // already alerted; reset on top-up
+
+    const defaultThreshold = Number(this.config.get<string>('LOW_BALANCE_THRESHOLD_USD') ?? 5);
+    const threshold = Number(user.lowBalanceThresholdUsd ?? defaultThreshold);
+    const balanceUsd = Number(balance.balanceUsd);
+
+    if (balanceUsd <= threshold) {
+      await this.notifications.sendLowBalance(user, balanceUsd, threshold);
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { lowBalanceNotifiedAt: new Date() },
+      });
+    }
   }
 }

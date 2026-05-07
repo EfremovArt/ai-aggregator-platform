@@ -24,6 +24,7 @@ import { CouponsModule } from './modules/coupons/coupons.module';
 import { ReferralsModule } from './modules/referrals/referrals.module';
 import { FreeTierModule } from './modules/free-tier/free-tier.module';
 import { MediaModule } from './modules/media/media.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { MediaModule } from './modules/media/media.module';
     ]),
     PrismaModule,
     RedisModule,
+    NotificationsModule,
     AuditModule,
     AntiAbuseModule,
     AuthModule,

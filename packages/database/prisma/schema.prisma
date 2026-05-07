@@ -71,6 +71,16 @@ model User {
   freeQuotaTokensUsed Int      @default(0)
   freeQuotaResetAt    DateTime @default(now())
 
+  // Notifications
+  telegramChatId         String?
+  notifyByEmail          Boolean  @default(true)
+  notifyByTelegram       Boolean  @default(false)
+  lowBalanceThresholdUsd Decimal? @db.Decimal(10, 4) // null = use platform default
+  lowBalanceNotifiedAt   DateTime? // de-dup: re-notify only after a top-up clears the flag
+
+  // Onboarding
+  onboardedAt DateTime?
+
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   lastSeenAt DateTime?

@@ -25,6 +25,12 @@ export class UsersService {
       lifetimeSpend: user.balance?.lifetimeSpend?.toString() ?? '0',
       lifetimeTopup: user.balance?.lifetimeTopup?.toString() ?? '0',
       riskScore: user.riskScore,
+      notifyByEmail: user.notifyByEmail,
+      notifyByTelegram: user.notifyByTelegram,
+      telegramChatId: user.telegramChatId,
+      lowBalanceThresholdUsd:
+        user.lowBalanceThresholdUsd != null ? Number(user.lowBalanceThresholdUsd) : null,
+      onboardedAt: user.onboardedAt,
       createdAt: user.createdAt,
     };
   }

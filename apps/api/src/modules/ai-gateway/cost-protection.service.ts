@@ -3,6 +3,7 @@ import type { Model } from '@prisma/client';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 interface CostCheckCtx {
   userId: string;
@@ -28,6 +29,7 @@ export class CostProtectionService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async getSnapshot(userId: string): Promise<BalanceSnapshot> {
@@ -89,6 +91,10 @@ export class CostProtectionService {
     const estimatedCostUsd = provider * (1 + margin / 100);
 
     if (snap.balanceUsd - estimatedCostUsd < snap.hardCutoff) {
+      // Fire-and-forget hard-cutoff notification (don't await — preflight latency matters).
+      this.notifyHardCutoff(ctx.userId, snap.balanceUsd).catch((e) =>
+        this.logger.warn(`hard-cutoff notify failed: ${(e as Error).message}`),
+      );
       throw new ForbiddenException({
         code: 'insufficient_funds',
         message: 'Insufficient balance for this request',
@@ -108,6 +114,20 @@ export class CostProtectionService {
       });
     }
     return { estimatedCostUsd };
+  }
+
+  /**
+   * De-duped hard-cutoff notification: at most one per user per 6 hours.
+   * Uses Redis EX to avoid spamming users on retry storms.
+   */
+  private async notifyHardCutoff(userId: string, balanceUsd: number): Promise<void> {
+    const key = `notif:hard-cutoff:${userId}`;
+    const set = await this.redis.client.set(key, '1', 'EX', 60 * 60 * 6, 'NX');
+    if (set !== 'OK') return; // already notified recently
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (user) {
+      await this.notifications.sendHardCutoff(user, balanceUsd);
+    }
   }
 
   computeCost(model: Model, promptTokens: number, completionTokens: number) {
