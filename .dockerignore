@@ -1,0 +1,14 @@
+**/node_modules
+**/.next
+**/dist
+**/build
+**/.turbo
+**/coverage
+.git
+.github
+.idea
+.vscode
+**/.env
+**/.env.local
+**/.env.*.local
+**/*.log
