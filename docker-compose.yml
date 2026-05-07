@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   postgres:
     image: postgres:16-alpine
@@ -15,8 +13,10 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    # Bind to 127.0.0.1 only (no external exposure) and let users override the
+    # host port via POSTGRES_HOST_PORT in case 5432 is already taken locally.
     ports:
-      - '5432:5432'
+      - '127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432'
 
   redis:
     image: redis:7-alpine
@@ -29,8 +29,11 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    # Bind to 127.0.0.1 only and allow overriding the host port via
+    # REDIS_HOST_PORT (e.g. set REDIS_HOST_PORT=6380 if you already run Redis
+    # on the default port locally).
     ports:
-      - '6379:6379'
+      - '127.0.0.1:${REDIS_HOST_PORT:-6379}:6379'
 
   api:
     build:
@@ -48,7 +51,7 @@ services:
       redis:
         condition: service_healthy
     ports:
-      - '4000:4000'
+      - '127.0.0.1:${API_HOST_PORT:-4000}:4000'
 
   web:
     build:
@@ -62,7 +65,7 @@ services:
     depends_on:
       - api
     ports:
-      - '3000:3000'
+      - '127.0.0.1:${WEB_HOST_PORT:-3000}:3000'
 
   nginx:
     image: nginx:1.27-alpine
@@ -71,8 +74,8 @@ services:
       - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./infra/nginx/conf.d:/etc/nginx/conf.d:ro
     ports:
-      - '80:80'
-      - '443:443'
+      - '127.0.0.1:${HTTP_HOST_PORT:-80}:80'
+      - '127.0.0.1:${HTTPS_HOST_PORT:-443}:443'
     depends_on:
       - api
       - web
