@@ -7,9 +7,14 @@ import { Strategy, type VerifyCallback, type Profile } from 'passport-google-oau
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(config: ConfigService) {
     super({
-      clientID: config.get<string>('GOOGLE_CLIENT_ID') ?? 'missing',
-      clientSecret: config.get<string>('GOOGLE_CLIENT_SECRET') ?? 'missing',
-      callbackURL: config.get<string>('GOOGLE_CALLBACK_URL') ?? 'http://localhost:4000/auth/google/callback',
+      // Use `||` (not `??`) so empty strings from .env fall back to the
+      // placeholder. passport-oauth2 throws synchronously at construction
+      // time if clientID/Secret is empty, which would crash Nest startup
+      // even when OAuth is intentionally disabled in dev.
+      clientID: config.get<string>('GOOGLE_CLIENT_ID') || 'oauth-disabled',
+      clientSecret: config.get<string>('GOOGLE_CLIENT_SECRET') || 'oauth-disabled',
+      callbackURL:
+        config.get<string>('GOOGLE_CALLBACK_URL') || 'http://localhost:4000/auth/google/callback',
       scope: ['email', 'profile'],
     });
   }

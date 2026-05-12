@@ -25,6 +25,18 @@ RUN pnpm --filter @ai-platform/api build
 # Prune dev deps for runtime
 RUN pnpm --filter @ai-platform/api deploy --prod /app
 
+# `pnpm deploy` creates a fresh /app without the `.prisma/client` artifacts
+# produced by `prisma generate` above. Copy the generated client from the
+# builder's pnpm store into the deployed app's pnpm store. Both stores key
+# packages by the same content-addressed hash, so the source/destination
+# directories under `.pnpm/@prisma+client@<hash>/node_modules/` line up.
+RUN set -eux; \
+    SRC=$(ls -d /repo/node_modules/.pnpm/@prisma+client@*/node_modules | head -1); \
+    DST=$(ls -d /app/node_modules/.pnpm/@prisma+client@*/node_modules | head -1); \
+    test -d "$SRC/.prisma"; \
+    test -n "$DST"; \
+    cp -r "$SRC/.prisma" "$DST/"
+
 
 ### Stage 2: runtime
 FROM node:20-alpine AS runtime
@@ -37,4 +49,9 @@ COPY --from=builder /repo/packages/database/prisma ./node_modules/@ai-platform/d
 
 EXPOSE 4000
 ENTRYPOINT ["/sbin/tini", "--"]
-CMD ["node", "dist/main.js"]
+# Apply pending Prisma migrations on container start, then boot Nest.
+# `migrate deploy` is idempotent and safe to run on every restart.
+# Call the prisma CLI bundle directly (the auto-generated bin shim in
+# node_modules/.../@ai-platform+database/.bin uses pnpm-store-relative
+# `..` paths that don't resolve after `pnpm deploy` flattens the layout).
+CMD ["sh", "-c", "set -e; PRISMA_CLI=$(ls node_modules/.pnpm/prisma@*/node_modules/prisma/build/index.js | head -1); node \"$PRISMA_CLI\" migrate deploy --schema=node_modules/@ai-platform/database/prisma/schema.prisma; exec node dist/main.js"]
