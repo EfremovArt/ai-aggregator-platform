@@ -1,5 +1,6 @@
 import { PrismaClient, ProviderId, ModelCapability, UserRole, UserStatus, CouponType } from '@prisma/client';
-import { createHash, randomBytes } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
+import * as argon2 from 'argon2';
 
 const prisma = new PrismaClient();
 
@@ -334,7 +335,10 @@ async function main() {
   const exists = await prisma.user.findUnique({ where: { email: adminEmail } });
   if (!exists) {
     const tempPassword = randomBytes(16).toString('hex');
-    const passwordHash = createHash('sha256').update(tempPassword).digest('hex');
+    // Match the runtime hashing used by AuthService.login (argon2id). If we
+    // stored a sha256 hash here the printed password would never let the
+    // admin log in — the verifier would reject it on every attempt.
+    const passwordHash = await argon2.hash(tempPassword, { type: argon2.argon2id });
     await prisma.user.create({
       data: {
         email: adminEmail,

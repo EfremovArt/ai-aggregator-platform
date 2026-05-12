@@ -50,11 +50,11 @@ export function CookieConsent() {
           <div className="text-sm leading-relaxed text-zinc-200">
             Мы используем cookies и аналогичные технологии для работы сервиса, аутентификации,
             аналитики и улучшения UX. Подробнее в{' '}
-            <Link href="/legal/privacy" className="underline underline-offset-4 hover:text-white">
+            <Link href="/privacy" className="underline underline-offset-4 hover:text-white">
               Политике конфиденциальности
             </Link>{' '}
             и{' '}
-            <Link href="/legal/cookies" className="underline underline-offset-4 hover:text-white">
+            <Link href="/cookies" className="underline underline-offset-4 hover:text-white">
               Cookie Policy
             </Link>
             . Согласие на обработку — в соответствии с GDPR и 152-ФЗ.

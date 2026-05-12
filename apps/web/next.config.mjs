@@ -31,7 +31,12 @@ const nextConfig = {
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com data:",
       "img-src 'self' data: blob: https:",
-      "connect-src 'self' https: wss:",
+      // Allow same-origin + any https/wss endpoint. In dev/docker-compose the
+      // api is exposed on http://localhost:4000 (a separate origin from the
+      // web on :3000 / nginx on :80), so we also whitelist localhost over http
+      // for any port. Keep the production deploy on HTTPS behind nginx and
+      // these extra entries are simply no-ops.
+      "connect-src 'self' https: wss: http://localhost:* http://127.0.0.1:*",
       "frame-src https://challenges.cloudflare.com https://oauth.telegram.org",
       "frame-ancestors 'none'",
       "base-uri 'self'",
