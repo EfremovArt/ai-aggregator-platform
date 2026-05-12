@@ -55,15 +55,37 @@ async function bootstrap() {
     }),
   );
 
+  // Production deploys provide an explicit CORS_ORIGINS allowlist. For dev we
+  // need to accept any of the localhost origins the browser might send:
+  //   - http://localhost          (nginx on :80 — port omitted by browser)
+  //   - http://localhost:3000     (Next.js web container hit directly)
+  //   - http://localhost:80       (rare but valid)
+  //   - http://127.0.0.1[:port]   (IP form)
+  // We always seed those into the allowlist (in addition to APP_URL) so a
+  // fresh `docker compose up` works out of the box without each new user
+  // discovering CORS_ORIGINS for themselves.
+  const DEFAULT_DEV_ORIGINS = [
+    'http://localhost',
+    'http://localhost:3000',
+    'http://localhost:80',
+    'http://127.0.0.1',
+    'http://127.0.0.1:3000',
+  ];
+  const explicit = process.env.CORS_ORIGINS;
+  const allowList = explicit
+    ? explicit.split(',').map((s) => s.trim()).filter(Boolean)
+    : Array.from(
+        new Set([
+          ...(process.env.APP_URL ? [process.env.APP_URL.trim()] : []),
+          ...DEFAULT_DEV_ORIGINS,
+        ]),
+      );
   app.enableCors({
     origin: (origin, cb) => {
-      const allowList = (process.env.CORS_ORIGINS ?? process.env.APP_URL ?? 'http://localhost:3000')
-        .split(',')
-        .map((s) => s.trim());
       if (!origin || allowList.includes(origin) || allowList.includes('*')) {
         cb(null, true);
       } else {
-        cb(new Error('Not allowed by CORS'), false);
+        cb(new Error(`Origin ${origin} not allowed by CORS`), false);
       }
     },
     credentials: true,
