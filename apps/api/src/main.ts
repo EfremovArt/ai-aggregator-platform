@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
@@ -70,14 +70,10 @@ async function bootstrap() {
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-      transformOptions: { enableImplicitConversion: true },
-    }),
-  );
+  // The codebase validates request payloads via Zod (see common/pipes/zod.pipe.ts)
+  // and does not use class-validator decorators, so we intentionally do NOT
+  // register the global ValidationPipe here — doing so would force
+  // class-validator/class-transformer as runtime deps for no benefit.
 
   app.useGlobalFilters(new GlobalExceptionFilter());
 

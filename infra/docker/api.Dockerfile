@@ -49,4 +49,9 @@ COPY --from=builder /repo/packages/database/prisma ./node_modules/@ai-platform/d
 
 EXPOSE 4000
 ENTRYPOINT ["/sbin/tini", "--"]
-CMD ["node", "dist/main.js"]
+# Apply pending Prisma migrations on container start, then boot Nest.
+# `migrate deploy` is idempotent and safe to run on every restart.
+# Call the prisma CLI bundle directly (the auto-generated bin shim in
+# node_modules/.../@ai-platform+database/.bin uses pnpm-store-relative
+# `..` paths that don't resolve after `pnpm deploy` flattens the layout).
+CMD ["sh", "-c", "set -e; PRISMA_CLI=$(ls node_modules/.pnpm/prisma@*/node_modules/prisma/build/index.js | head -1); node \"$PRISMA_CLI\" migrate deploy --schema=node_modules/@ai-platform/database/prisma/schema.prisma; exec node dist/main.js"]

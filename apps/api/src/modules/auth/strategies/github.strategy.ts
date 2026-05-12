@@ -7,10 +7,13 @@ import { Strategy as GitHubBase } from 'passport-github2';
 export class GitHubStrategy extends PassportStrategy(GitHubBase, 'github') {
   constructor(config: ConfigService) {
     super({
-      clientID: config.get<string>('GITHUB_CLIENT_ID') ?? 'missing',
-      clientSecret: config.get<string>('GITHUB_CLIENT_SECRET') ?? 'missing',
+      // Use `||` (not `??`) so empty strings from .env fall back to the
+      // placeholder. passport-oauth2 throws synchronously at construction
+      // time if clientID/Secret is empty.
+      clientID: config.get<string>('GITHUB_CLIENT_ID') || 'oauth-disabled',
+      clientSecret: config.get<string>('GITHUB_CLIENT_SECRET') || 'oauth-disabled',
       callbackURL:
-        config.get<string>('GITHUB_CALLBACK_URL') ?? 'http://localhost:4000/auth/github/callback',
+        config.get<string>('GITHUB_CALLBACK_URL') || 'http://localhost:4000/auth/github/callback',
       scope: ['user:email'],
     });
   }
