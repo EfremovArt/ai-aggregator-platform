@@ -9,7 +9,9 @@
 
 generator client {
   provider      = "prisma-client-js"
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "debian-openssl-3.0.x"]
+  // Include ARM64 musl/glibc targets so the image works on Apple Silicon
+  // (M1/M2/M3) Macs running Docker Desktop, in addition to x86_64.
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x", "debian-openssl-3.0.x", "linux-arm64-openssl-3.0.x"]
 }
 
 datasource db {
