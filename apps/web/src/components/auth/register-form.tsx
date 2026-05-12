@@ -14,17 +14,34 @@ import { Label } from '@/components/ui/label';
 import { api, ApiError } from '@/lib/api';
 import { OauthButtons } from './oauth-buttons';
 
+// Client schema must mirror the server-side passwordSchema in
+// packages/shared/src/schemas.ts. Letting the client allow weaker passwords
+// produces a confusing 400 round-trip — surface the requirements upfront.
 const schema = z.object({
   email: z.string().email('Некорректный email'),
-  password: z.string().min(10, 'Минимум 10 символов'),
+  password: z
+    .string()
+    .min(8, 'Минимум 8 символов')
+    .max(128, 'Максимум 128 символов')
+    .regex(/[a-z]/, 'Нужна хотя бы одна строчная буква')
+    .regex(/[A-Z]/, 'Нужна хотя бы одна заглавная буква')
+    .regex(/[0-9]/, 'Нужна хотя бы одна цифра'),
   displayName: z.string().min(1).max(64).optional(),
 });
 type Form = z.infer<typeof schema>;
 
+type ValidationPayload = {
+  error?: {
+    code?: string;
+    message?: string;
+    details?: { fieldErrors?: Record<string, string[]> };
+  };
+};
+
 export function RegisterForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const { register, handleSubmit, formState } = useForm<Form>({ resolver: zodResolver(schema) });
+  const { register, handleSubmit, formState, setError } = useForm<Form>({ resolver: zodResolver(schema) });
 
   async function onSubmit(values: Form) {
     setLoading(true);
@@ -34,7 +51,23 @@ export function RegisterForm() {
       router.push('/dashboard');
       router.refresh();
     } catch (e) {
-      toast.error(e instanceof ApiError ? e.message : 'Не удалось зарегистрироваться');
+      if (e instanceof ApiError) {
+        const fieldErrors = (e.payload as ValidationPayload | undefined)?.error?.details?.fieldErrors;
+        if (fieldErrors) {
+          // Attach server-side field errors so they render under each input
+          // instead of being lost behind a generic toast.
+          for (const [field, messages] of Object.entries(fieldErrors)) {
+            if (field === 'email' || field === 'password' || field === 'displayName') {
+              setError(field, { type: 'server', message: messages.join(', ') });
+            }
+          }
+          toast.error('Проверьте поля формы');
+          return;
+        }
+        toast.error(e.message);
+        return;
+      }
+      toast.error('Не удалось зарегистрироваться');
     } finally {
       setLoading(false);
     }
