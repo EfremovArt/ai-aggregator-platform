@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { LogoutButton } from '@/components/auth/logout-button';
 import { Activity, Users, ShieldAlert, Flag, BarChart3, Server, Ticket, Download } from 'lucide-react';
 
 const ITEMS = [
@@ -19,23 +20,28 @@ const ITEMS = [
 export function AdminNav() {
   const pathname = usePathname();
   return (
-    <nav className="space-y-1 p-4">
-      {ITEMS.map((it) => {
-        const active = pathname === it.href || pathname?.startsWith(`${it.href}/`);
-        return (
-          <Link
-            key={it.href}
-            href={it.href}
-            className={cn(
-              'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
-              active ? 'bg-white/[0.06] text-foreground' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground',
-            )}
-          >
-            <it.icon className="h-4 w-4" />
-            {it.label}
-          </Link>
-        );
-      })}
+    <nav className="flex h-[calc(100vh-4rem)] flex-col p-4">
+      <div className="space-y-1">
+        {ITEMS.map((it) => {
+          const active = pathname === it.href || pathname?.startsWith(`${it.href}/`);
+          return (
+            <Link
+              key={it.href}
+              href={it.href}
+              className={cn(
+                'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
+                active ? 'bg-white/[0.06] text-foreground' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground',
+              )}
+            >
+              <it.icon className="h-4 w-4" />
+              {it.label}
+            </Link>
+          );
+        })}
+      </div>
+      <div className="mt-auto border-t border-white/[0.06] pt-3">
+        <LogoutButton />
+      </div>
     </nav>
   );
 }
