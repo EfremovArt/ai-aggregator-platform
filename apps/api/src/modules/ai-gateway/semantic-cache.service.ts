@@ -10,7 +10,12 @@ export class SemanticCacheService {
   buildKey(req: ChatCompletionRequest): string {
     const normalized = {
       model: req.model,
-      messages: req.messages.map((m) => ({ role: m.role, content: m.content.trim() })),
+      messages: req.messages.map((m) => ({
+        role: m.role,
+        // Trim whitespace only for plain-text messages. For multimodal arrays
+        // (images), use the raw payload — image data URLs aren't normalizable.
+        content: typeof m.content === 'string' ? m.content.trim() : m.content,
+      })),
       temperature: req.temperature ?? 0,
       maxTokens: req.maxTokens ?? 0,
     };

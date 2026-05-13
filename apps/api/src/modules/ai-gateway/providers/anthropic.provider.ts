@@ -3,6 +3,7 @@ import { ulid } from 'ulid';
 import type { ProviderId } from '@prisma/client';
 
 import type { IAiProvider } from './provider.interface';
+import { flattenContent } from './content';
 import type {
   ChatCompletionRequest,
   ChatCompletionResponse,
@@ -31,10 +32,16 @@ export class AnthropicProvider implements IAiProvider {
   }
 
   private toAnthropicMessages(req: ChatCompletionRequest) {
-    const system = req.messages.filter((m) => m.role === 'system').map((m) => m.content).join('\n\n');
+    const system = req.messages
+      .filter((m) => m.role === 'system')
+      .map((m) => flattenContent(m.content))
+      .join('\n\n');
     const messages = req.messages
       .filter((m) => m.role !== 'system')
-      .map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content }));
+      .map((m) => ({
+        role: m.role === 'assistant' ? 'assistant' : 'user',
+        content: flattenContent(m.content),
+      }));
     return { system: system || undefined, messages };
   }
 
