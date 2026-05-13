@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { cn, formatRub } from '@/lib/utils';
 
 type Category = 'all' | 'text' | 'code' | 'image' | 'video' | 'audio' | 'embeddings';
 
@@ -345,48 +346,54 @@ export function Models() {
 
         <div className="mt-8 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
           {visible.map((m, idx) => (
-            <Card key={`${m.provider}-${m.name}-${idx}`} className="transition-colors hover:border-cyber-violet/40">
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="text-xs uppercase tracking-wide text-muted-foreground">
-                      {m.provider}
+            <Link
+              key={`${m.provider}-${m.name}-${idx}`}
+              href="/dashboard/models"
+              className="group block transition-transform hover:-translate-y-0.5"
+            >
+              <Card className="h-full transition-colors group-hover:border-cyber-violet/40">
+                <CardContent className="p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-xs uppercase tracking-wide text-muted-foreground">
+                        {m.provider}
+                      </div>
+                      <div className="mt-0.5 text-base font-semibold">{m.name}</div>
                     </div>
-                    <div className="mt-0.5 text-base font-semibold">{m.name}</div>
+                    <Badge variant="outline" className="text-[10px] capitalize">
+                      {m.category}
+                      {m.context ? ` · ${m.context}` : ''}
+                    </Badge>
                   </div>
-                  <Badge variant="outline" className="text-[10px] capitalize">
-                    {m.category}
-                    {m.context ? ` · ${m.context}` : ''}
-                  </Badge>
-                </div>
-                <p className="mt-3 text-sm text-muted-foreground">
-                  <span className="text-foreground/80">Лучше всего для: </span>
-                  {m.best}
-                </p>
-                <div className="mt-4">
-                  {m.inputPer1k !== undefined ? (
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <PriceCell
-                        title={`₽${m.inputPer1k.toFixed(3)}`}
-                        sub="input · 1K токенов"
-                      />
-                      {m.outputPer1k !== undefined ? (
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    <span className="text-foreground/80">Лучше всего для: </span>
+                    {m.best}
+                  </p>
+                  <div className="mt-4">
+                    {m.inputPer1k !== undefined ? (
+                      <div className="grid grid-cols-2 gap-2 text-xs">
                         <PriceCell
-                          title={`₽${m.outputPer1k.toFixed(3)}`}
-                          sub="output · 1K токенов"
+                          title={formatRub(m.inputPer1k, 3)}
+                          sub="input · 1K токенов"
                         />
-                      ) : null}
-                    </div>
-                  ) : m.unitPrice !== undefined ? (
-                    <PriceCell
-                      title={`от ₽${m.unitPrice}`}
-                      sub={m.unitLabel ?? 'за единицу'}
-                      full
-                    />
-                  ) : null}
-                </div>
-              </CardContent>
-            </Card>
+                        {m.outputPer1k !== undefined ? (
+                          <PriceCell
+                            title={formatRub(m.outputPer1k, 3)}
+                            sub="output · 1K токенов"
+                          />
+                        ) : null}
+                      </div>
+                    ) : m.unitPrice !== undefined ? (
+                      <PriceCell
+                        title={`от ${formatRub(m.unitPrice, m.unitPrice < 1 ? 2 : 0)}`}
+                        sub={m.unitLabel ?? 'за единицу'}
+                        full
+                      />
+                    ) : null}
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
 

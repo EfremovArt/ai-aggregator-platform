@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Logo } from './logo';
+import { useAuth } from '@/lib/use-auth';
 
 const NAV = [
   { href: '/#models', label: 'Модели' },
@@ -17,6 +18,7 @@ const NAV = [
 
 export function Header() {
   const [open, setOpen] = useState(false);
+  const { isAuthenticated, isLoading } = useAuth();
   return (
     <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-background/70 backdrop-blur-xl">
       <div className="container flex h-16 items-center justify-between gap-4">
@@ -36,16 +38,29 @@ export function Header() {
           ))}
         </nav>
         <div className="hidden items-center gap-2 md:flex">
-          <Link href="/login">
-            <Button variant="ghost" size="sm">
-              Войти
-            </Button>
-          </Link>
-          <Link href="/register">
-            <Button size="sm" variant="cyber">
-              Начать бесплатно
-            </Button>
-          </Link>
+          {isLoading ? (
+            <div className="h-9 w-44" aria-hidden />
+          ) : isAuthenticated ? (
+            <Link href="/dashboard">
+              <Button size="sm" variant="cyber">
+                <LayoutDashboard className="mr-1.5 h-4 w-4" />
+                В личный кабинет
+              </Button>
+            </Link>
+          ) : (
+            <>
+              <Link href="/login">
+                <Button variant="ghost" size="sm">
+                  Войти
+                </Button>
+              </Link>
+              <Link href="/register">
+                <Button size="sm" variant="cyber">
+                  Начать бесплатно
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
         <button
           className="md:hidden"
@@ -69,16 +84,27 @@ export function Header() {
               </Link>
             ))}
             <div className="mt-2 flex gap-2 px-3">
-              <Link href="/login" className="flex-1">
-                <Button variant="outline" className="w-full">
-                  Войти
-                </Button>
-              </Link>
-              <Link href="/register" className="flex-1">
-                <Button variant="cyber" className="w-full">
-                  Начать
-                </Button>
-              </Link>
+              {isAuthenticated ? (
+                <Link href="/dashboard" className="flex-1" onClick={() => setOpen(false)}>
+                  <Button variant="cyber" className="w-full">
+                    <LayoutDashboard className="mr-1.5 h-4 w-4" />
+                    В личный кабинет
+                  </Button>
+                </Link>
+              ) : (
+                <>
+                  <Link href="/login" className="flex-1" onClick={() => setOpen(false)}>
+                    <Button variant="outline" className="w-full">
+                      Войти
+                    </Button>
+                  </Link>
+                  <Link href="/register" className="flex-1" onClick={() => setOpen(false)}>
+                    <Button variant="cyber" className="w-full">
+                      Начать
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

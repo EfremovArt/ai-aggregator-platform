@@ -118,12 +118,10 @@ async function fetchOpenRouterModels(): Promise<OpenRouterModel[]> {
   return json.data;
 }
 
-function isTextChatModel(m: OpenRouterModel): boolean {
-  const outputs = m.architecture?.output_modalities ?? [];
-  // Catalog is text-chat focused; skip pure-image/audio/video output models for now —
-  // their pricing model (per-image/per-second) doesn't fit the per-token columns.
-  if (outputs.length > 0 && !outputs.includes('text')) return false;
-  // Need at least input prompt pricing to derive a per-token price.
+function hasValidPricing(m: OpenRouterModel): boolean {
+  // Skip rows where prompt price is missing/garbage. OpenRouter occasionally
+  // returns string `"-1"` for retired / no-longer-vended models — those rows
+  // can't be sold to a customer with confidence.
   const promptPrice = Number(m.pricing?.prompt ?? '0');
   if (!Number.isFinite(promptPrice) || promptPrice < 0) return false;
   return true;
@@ -140,10 +138,10 @@ async function main() {
   console.log(`  USD→RUB: ${usdRub.toFixed(2)} (${rateSource})`);
   console.log(`  Fetched ${allModels.length} total models from OpenRouter`);
 
-  const textModels = allModels.filter(isTextChatModel);
-  console.log(`  ${textModels.length} text-chat models pass filter`);
+  const valid = allModels.filter(hasValidPricing);
+  console.log(`  ${valid.length} models have valid pricing`);
 
-  const toImport = IMPORT_LIMIT > 0 ? textModels.slice(0, IMPORT_LIMIT) : textModels;
+  const toImport = IMPORT_LIMIT > 0 ? valid.slice(0, IMPORT_LIMIT) : valid;
   console.log(`  Will import ${toImport.length} models`);
 
   // Ensure all referenced provider rows exist before we try to FK into them.
@@ -171,6 +169,8 @@ async function main() {
       // OpenRouter pricing is "USD per token" — multiply by 1M for per-1M comparable to our schema.
       const inputUsdPer1M = Number(m.pricing?.prompt ?? '0') * 1_000_000;
       const outputUsdPer1M = Number(m.pricing?.completion ?? '0') * 1_000_000;
+      // Per-image price (already USD per image, not per million).
+      const imageUsdPerImg = Number(m.pricing?.image ?? '0');
 
       const inputRubPer1M = inputUsdPer1M * markup * usdRub;
       const outputRubPer1M = outputUsdPer1M * markup * usdRub;
@@ -196,6 +196,7 @@ async function main() {
           maxOutputTokens: Math.max(0, maxOutputTokens ?? 0),
           inputUsdPer1M,
           outputUsdPer1M,
+          imageUsdPerImg,
           inputRubPer1M,
           outputRubPer1M,
           marginPercent: MARGIN_PERCENT,
@@ -211,6 +212,7 @@ async function main() {
           maxOutputTokens: Math.max(0, maxOutputTokens ?? 0),
           inputUsdPer1M,
           outputUsdPer1M,
+          imageUsdPerImg,
           inputRubPer1M,
           outputRubPer1M,
           marginPercent: MARGIN_PERCENT,

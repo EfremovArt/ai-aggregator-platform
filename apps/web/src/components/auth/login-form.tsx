@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,6 +22,7 @@ type Form = z.infer<typeof schema>;
 
 export function LoginForm() {
   const router = useRouter();
+  const params = useSearchParams();
   const [loading, setLoading] = useState(false);
   const { register, handleSubmit, formState } = useForm<Form>({ resolver: zodResolver(schema) });
 
@@ -30,7 +31,8 @@ export function LoginForm() {
     try {
       await api('/auth/login', { method: 'POST', json: values });
       toast.success('Добро пожаловать!');
-      router.push('/dashboard');
+      const next = params.get('next');
+      router.push(next && next.startsWith('/') ? next : '/dashboard');
       router.refresh();
     } catch (e) {
       toast.error(e instanceof ApiError ? e.message : 'Не удалось войти');

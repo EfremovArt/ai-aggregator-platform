@@ -23,3 +23,17 @@ export function formatTokens(tokens: number) {
   if (tokens > 1_000) return `${(tokens / 1_000).toFixed(1)}K`;
   return tokens.toString();
 }
+
+/**
+ * Format a number as RUB with the symbol AFTER the amount (Russian convention):
+ * formatRub(8) === "8 ₽". `digits` lets you keep small numbers readable
+ * (e.g. token prices: 0.04 ₽). Passing `0` clamps to integer.
+ */
+export function formatRub(value: number, digits: number = value < 10 ? 2 : 0) {
+  const safe = Number.isFinite(value) ? value : 0;
+  const fmt = new Intl.NumberFormat('ru-RU', {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  });
+  return `${fmt.format(safe)} ₽`;
+}
