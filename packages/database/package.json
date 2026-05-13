@@ -15,6 +15,7 @@
     "migrate:reset": "prisma migrate reset --force",
     "studio": "prisma studio",
     "seed": "tsx prisma/seed.ts",
+    "import:openrouter": "tsx prisma/import-openrouter.ts",
     "format": "prisma format",
     "lint": "echo 'no lint for db package' ",
     "typecheck": "tsc --noEmit"

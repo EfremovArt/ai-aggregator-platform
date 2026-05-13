@@ -23,8 +23,11 @@ export class ModelsService {
       pricing: {
         inputUsdPer1M: Number(m.inputUsdPer1M),
         outputUsdPer1M: Number(m.outputUsdPer1M),
+        inputRubPer1M: Number(m.inputRubPer1M),
+        outputRubPer1M: Number(m.outputRubPer1M),
         marginPercent: m.marginPercent,
       },
+      source: m.source,
       tags: m.tags,
       isFeatured: m.isFeatured,
     }));
