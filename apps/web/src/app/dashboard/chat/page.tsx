@@ -12,6 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatRub } from '@/lib/utils';
+import { CATEGORIES, categorize, type CategoryKey } from '@/lib/model-categories';
 
 interface Model {
   slug: string;
@@ -71,35 +72,18 @@ const DEFAULT_MODEL = 'openai/gpt-4o-mini';
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB before base64; safe for most providers.
 const TEXT_FILE_EXTS = ['.txt', '.md', '.markdown', '.csv', '.json', '.log', '.yaml', '.yml'];
 
-type ChatCategoryKey = 'featured' | 'vision' | 'code' | 'reasoning' | 'fast' | 'all';
+// Show the same disjoint categories as /dashboard/models, plus a virtual
+// "⭐ Популярные" pinned-first chip. Soon-to-be tabs are hidden in the chat
+// picker because they don't represent anything you can talk to today.
+type ChatCategoryKey = CategoryKey | 'featured';
 
-function familyOrSlug(m: Model): string {
-  return `${m.family ?? ''} ${m.slug}`.toLowerCase();
-}
-
-const CHAT_CATEGORIES: Array<{
-  key: ChatCategoryKey;
-  label: string;
-  match: (m: Model) => boolean;
-}> = [
-  { key: 'featured', label: '⭐ Топ', match: (m) => m.isFeatured },
-  { key: 'vision', label: '🖼 Vision', match: (m) => m.capabilities.includes('IMAGE_INPUT') },
-  {
-    key: 'code',
-    label: '💻 Код',
-    match: (m) => /code|coder|codestral|qwen-?coder/.test(familyOrSlug(m)),
-  },
-  {
-    key: 'reasoning',
-    label: '🧠 Reasoning',
-    match: (m) => /\b(o1|o3|o4|r1|reasoning|think)\b/.test(familyOrSlug(m)),
-  },
-  {
-    key: 'fast',
-    label: '⚡ Дешёвые',
-    match: (m) => m.pricing.inputRubPer1M > 0 && m.pricing.inputRubPer1M <= 50,
-  },
-  { key: 'all', label: 'Все', match: () => true },
+const CHAT_PICKER_CATEGORIES: Array<{ key: ChatCategoryKey; label: string }> = [
+  { key: 'featured', label: '⭐ Популярные' },
+  ...CATEGORIES.filter((c) => c.available && c.key !== 'all').map((c) => ({
+    key: c.key,
+    label: c.label,
+  })),
+  { key: 'all', label: 'Все' },
 ];
 
 function readFileAsDataUrl(file: File): Promise<string> {
@@ -186,8 +170,11 @@ function ChatPageInner() {
   const supportsVision = !!activeModel?.capabilities.includes('IMAGE_INPUT');
 
   const filteredPickerModels = useMemo(() => {
-    const matcher = CHAT_CATEGORIES.find((c) => c.key === pickerCategory) ?? CHAT_CATEGORIES[0];
-    const byCat = modelOptions.filter((m) => matcher.match(m));
+    const byCat = (() => {
+      if (pickerCategory === 'featured') return modelOptions.filter((m) => m.isFeatured);
+      if (pickerCategory === 'all') return modelOptions;
+      return modelOptions.filter((m) => categorize(m) === pickerCategory);
+    })();
     if (!pickerQuery) return byCat.slice(0, 50);
     const q = pickerQuery.toLowerCase();
     return byCat
@@ -412,7 +399,7 @@ function ChatPageInner() {
                     🚀 Grom Free (бесплатно)
                   </button>
                 )}
-                {CHAT_CATEGORIES.map((c) => (
+                {CHAT_PICKER_CATEGORIES.map((c) => (
                   <button
                     key={c.key}
                     type="button"
