@@ -10,9 +10,23 @@ export type ProviderId =
 
 export type ChatRole = 'system' | 'user' | 'assistant' | 'tool';
 
+/**
+ * OpenAI-style multimodal content. A message body may be:
+ *   - a plain string (text-only), or
+ *   - an array of content parts, each either `{type: 'text', text}` or
+ *     `{type: 'image_url', image_url: {url}}`.
+ *
+ * Only models with the `IMAGE_INPUT` capability handle image parts upstream
+ * — for everything else the gateway flattens parts back into a plain string
+ * before forwarding (so legacy providers don't choke on the array shape).
+ */
+export type ChatContentPart =
+  | { type: 'text'; text: string }
+  | { type: 'image_url'; image_url: { url: string; detail?: 'low' | 'high' | 'auto' } };
+
 export interface ChatMessage {
   role: ChatRole;
-  content: string;
+  content: string | ChatContentPart[];
   name?: string;
   toolCallId?: string;
   toolCalls?: ToolCall[];

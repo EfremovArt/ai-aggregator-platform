@@ -49,9 +49,21 @@ export const createApiKeySchema = z.object({
   expiresAt: z.string().datetime().optional(),
 });
 
+export const chatContentPartSchema = z.union([
+  z.object({ type: z.literal('text'), text: z.string() }),
+  z.object({
+    type: z.literal('image_url'),
+    image_url: z.object({
+      url: z.string().min(1),
+      detail: z.enum(['low', 'high', 'auto']).optional(),
+    }),
+  }),
+]);
+
 export const chatMessageSchema = z.object({
   role: z.enum(['system', 'user', 'assistant', 'tool']),
-  content: z.string(),
+  // Plain text is the common case. Arrays carry image parts for vision models.
+  content: z.union([z.string(), z.array(chatContentPartSchema).min(1)]),
   name: z.string().optional(),
   toolCallId: z.string().optional(),
 });

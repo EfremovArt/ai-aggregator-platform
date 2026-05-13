@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { ChatCompletionRequest, ChatCompletionResponse } from '@ai-platform/shared';
 
 import { ProviderFactory } from './providers/provider.factory';
+import { flattenContent } from './providers/content';
 import { ModelRouterService } from '../model-router/model-router.service';
 import { ProviderRegistryService } from '../model-router/provider-registry.service';
 import { CostProtectionService } from './cost-protection.service';
@@ -83,7 +84,7 @@ export class AiGatewayService {
     }
 
     // 2. Moderation (input)
-    await this.moderation.checkInputs(req.messages.map((m) => m.content).join('\n'), ctx.userId);
+    await this.moderation.checkInputs(req.messages.map((m) => flattenContent(m.content)).join('\n'), ctx.userId);
 
     // 3. Routing
     const { model, provider } = await this.router.route(req.model);
@@ -149,7 +150,7 @@ export class AiGatewayService {
     const ft = await this.maybeApplyFreeTier(req, ctx);
     req = ft.req;
     const freeTierActive = ft.freeTierActive;
-    await this.moderation.checkInputs(req.messages.map((m) => m.content).join('\n'), ctx.userId);
+    await this.moderation.checkInputs(req.messages.map((m) => flattenContent(m.content)).join('\n'), ctx.userId);
     const { model } = await this.router.route(req.model);
     const promptTokens = this.tokens.estimateChat(req);
     const maxTokens = req.maxTokens ?? Math.min(model.maxOutputTokens, 4096);

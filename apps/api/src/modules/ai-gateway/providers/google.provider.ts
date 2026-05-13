@@ -3,6 +3,7 @@ import { ulid } from 'ulid';
 import type { ProviderId } from '@prisma/client';
 
 import type { IAiProvider } from './provider.interface';
+import { flattenContent } from './content';
 import type {
   ChatCompletionRequest,
   ChatCompletionResponse,
@@ -27,12 +28,15 @@ export class GoogleProvider implements IAiProvider {
       .filter((m) => m.role !== 'system')
       .map((m) => ({
         role: m.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: m.content }],
+        parts: [{ text: flattenContent(m.content) }],
       }));
   }
 
   private buildSystem(req: ChatCompletionRequest) {
-    const sys = req.messages.filter((m) => m.role === 'system').map((m) => m.content).join('\n\n');
+    const sys = req.messages
+      .filter((m) => m.role === 'system')
+      .map((m) => flattenContent(m.content))
+      .join('\n\n');
     return sys ? { systemInstruction: { parts: [{ text: sys }] } } : {};
   }
 
