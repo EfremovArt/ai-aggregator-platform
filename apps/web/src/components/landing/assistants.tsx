@@ -49,14 +49,15 @@ export function Assistants() {
 
         <div className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {PRESETS.map((p) => (
-            <div
+            <Link
               key={p.name}
+              href="/dashboard/assistants"
               className="glass group flex flex-col rounded-2xl p-4 transition-colors hover:border-cyber-violet/40"
             >
               <div className="text-2xl">{p.emoji}</div>
               <div className="mt-2 text-sm font-semibold text-foreground">{p.name}</div>
               <div className="mt-1 text-xs leading-relaxed text-muted-foreground">{p.description}</div>
-            </div>
+            </Link>
           ))}
         </div>
 
