@@ -96,28 +96,41 @@ export default function AssistantsPage() {
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((a) => (
-            <Card key={a.slug} className="flex flex-col">
-              <CardHeader className="space-y-1.5">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <span className="text-2xl">{a.emoji}</span>
-                  <span>{a.name}</span>
-                  {a.isFeatured && (
-                    <Badge variant="cyber" className="ml-auto text-[10px]">
-                      ТОП
-                    </Badge>
-                  )}
-                </CardTitle>
-                <p className="text-xs text-muted-foreground">{a.description}</p>
-              </CardHeader>
-              <CardContent className="mt-auto flex items-center justify-between">
-                <div className="text-xs text-muted-foreground">
-                  {a.recommendedModel?.replace(/^(.+?)\//, '') ?? '—'}
-                </div>
-                <Button asChild size="sm" variant="outline">
-                  <Link href={`/dashboard/chat?assistant=${a.slug}`}>Использовать</Link>
-                </Button>
-              </CardContent>
-            </Card>
+            <Link
+              key={a.slug}
+              href={`/dashboard/chat?assistant=${a.slug}`}
+              className="group block transition-transform hover:-translate-y-0.5"
+            >
+              <Card className="flex h-full flex-col transition-colors group-hover:border-cyber-violet/40">
+                <CardHeader className="space-y-1.5">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <span className="text-2xl">{a.emoji}</span>
+                    <span>{a.name}</span>
+                    {a.isFeatured && (
+                      <Badge variant="cyber" className="ml-auto text-[10px]">
+                        ТОП
+                      </Badge>
+                    )}
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground">{a.description}</p>
+                </CardHeader>
+                <CardContent className="mt-auto flex items-center justify-between">
+                  <div className="text-xs text-muted-foreground">
+                    {a.recommendedModel?.replace(/^(.+?)\//, '') ?? '—'}
+                  </div>
+                  <Button
+                    asChild
+                    size="sm"
+                    variant="outline"
+                    // The outer Link already handles navigation. Keeping the button
+                    // here for the explicit affordance, but it points to the same href.
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span>Использовать</span>
+                  </Button>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       )}

@@ -264,6 +264,13 @@ enum ModelCapability {
   WEB_SEARCH
 }
 
+// Where a Model row came from. The importer only owns its own rows so manual
+// seed/admin edits aren't clobbered on the next sync.
+enum ModelSource {
+  MANUAL
+  OPENROUTER
+}
+
 model Provider {
   id           ProviderId @id
   displayName  String
@@ -292,12 +299,18 @@ model Model {
   capabilities    ModelCapability[] @default([])
   contextLength   Int               @default(8192)
   maxOutputTokens Int               @default(4096)
-  // Pricing in USD per 1M tokens
+  // Pricing in USD per 1M tokens (raw upstream price, before our markup)
   inputUsdPer1M   Decimal           @default(0) @db.Decimal(12, 6)
   outputUsdPer1M  Decimal           @default(0) @db.Decimal(12, 6)
   imageUsdPerImg  Decimal           @default(0) @db.Decimal(12, 6)
-  // Margin we charge on top of provider price
+  // Customer-facing price in RUB per 1M tokens, persisted at import time so
+  // we don't re-hit the FX rate service on every catalog read. Recomputed by
+  // the importer using the day's CBR rate × marginPercent.
+  inputRubPer1M   Decimal           @default(0) @db.Decimal(14, 4)
+  outputRubPer1M  Decimal           @default(0) @db.Decimal(14, 4)
+  // Margin we charge on top of provider price (percent, e.g. 150 = ×2.5)
   marginPercent   Float             @default(20)
+  source          ModelSource       @default(MANUAL)
   isActive        Boolean           @default(true)
   isFeatured      Boolean           @default(false)
   fallbackSlug    String?
