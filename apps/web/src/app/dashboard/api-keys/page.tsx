@@ -44,7 +44,8 @@ export default function ApiKeysPage() {
       <div>
         <h1 className="text-2xl font-semibold">API ключи</h1>
         <p className="text-sm text-muted-foreground">
-          Используйте OpenAI-совместимый API. Ключ показывается один раз — сохраните его сразу.
+          Один ключ — доступ ко всем моделям из каталога через OpenAI-совместимый API. Ключ
+          показывается один раз — сохраните его сразу.
         </p>
       </div>
       <Card>
